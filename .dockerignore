@@ -1,0 +1,25 @@
+# Dependencies — reinstalled inside the container
+frontend/node_modules/
+
+# Vite build output — rebuilt inside the container
+frontend/dist/
+
+# Go build artifacts
+bin/
+static/
+
+# Scores file — managed by the container volume, not baked into the image
+scores.json
+
+# Version control
+.git/
+.gitignore
+
+# Local dev / editor
+.env
+*.env.local
+.vscode/
+.idea/
+
+# Docker artifacts
+docker-compose.override.yml

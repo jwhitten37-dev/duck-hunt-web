@@ -1,0 +1,28 @@
+# Go
+bin/
+*.exe
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+
+# Sprite sheet — supply your own, not redistributed (Nintendo IP)
+frontend/public/sprites.png
+
+# Built static assets (generated from frontend/dist via `make copy-static`)
+static/*
+!static/.gitkeep
+
+# Runtime data
+scores.json
+
+# Environment files
+.env
+.env.local
+*.env.local
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

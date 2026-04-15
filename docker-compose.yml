@@ -1,0 +1,24 @@
+services:
+  duck-hunt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      SCORES_FILE: /app/data/scores.json
+    volumes:
+      # Named volume keeps leaderboard scores across `docker compose down/up`.
+      # Mounted at /app/data so it only covers scores, not the app binaries or static assets.
+      # Remove with `docker compose down -v` to wipe the board.
+      - scores-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  scores-data:
