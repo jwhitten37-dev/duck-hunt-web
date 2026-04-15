@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: duck-hunt
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: duck-hunt.example.com   # replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: duck-hunt
+                port:
+                  number: 80
+  # Uncomment to enable TLS (cert-manager or manual secret)
+  # tls:
+  #   - hosts:
+  #       - duck-hunt.example.com
+  #     secretName: duck-hunt-tls

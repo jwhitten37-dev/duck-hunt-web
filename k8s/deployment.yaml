@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duck-hunt
+  labels:
+    app: duck-hunt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: duck-hunt
+  template:
+    metadata:
+      labels:
+        app: duck-hunt
+    spec:
+      containers:
+        - name: duck-hunt
+          image: duck-hunt:latest          # replace with your registry image
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 2
