@@ -1,0 +1,62 @@
+
+deployment_level: "PRODUCTION"
+organization: "ai2c"
+security_group: "ai2c"
+
+duck-hunt:
+  trufflehog:
+    false_positives: ["-sast-output=semgrep"] # was used for dod certs
+    excluded_files: []
+  project_type: "container"
+  dockerfile_folder: "."
+  container_lifespan: "EPHEMERAL"
+  connection_context: "EXTERNAL"
+  container_spec:
+    root_user: >-
+      This is a pipeline container and requires root privileges to conduct scans
+      of target applications built by cDSO.
+    non_minimized: ""
+  mitigations:
+    # Issue in the upstream Alpine 3.22 base container
+    - CVE_2025_4575: >-
+        "Issue summary: Use of -addreject option with the openssl x509 application adds a trusted use instead of a rejected use for a certificate.  Impact summary: If a user intends to make a trusted certificate rejected for a particular use it will be instead marked as trusted for that use.  A copy & paste error during minor refactoring of the code introduced this issue in the OpenSSL 3.5 version. If, for example, a trusted CA certificate should be trusted only for the purpose of authenticating TLS servers but not for CMS signature verification and the CMS signature verification is intended to be marked as rejected with the -addreject option, the resulting CA certificate will be trusted for CMS signature verification purpose instead.  Only users which use the trusted certificate format who use the openssl x509 command line application to add rejected uses are affected by this issue. The issues affecting only the command line application are considered to be Low severity.  The FIPS modules in 3.5, 3.4, 3.3, 3.2, 3.1 and 3.0 are not affected by this issue.  OpenSSL 3.4, 3.3, 3.2, 3.1, 3.0, 1.1.1 and 1.0.2 are also not affected by this issue."
+    - CVE_2025_6069: >-
+        Description: The html.parser.HTMLParser class had worse-case quadratic complexity when processing certain
+        crafted malformed inputs potentially leading to amplified denial-of-service.
+        Mitigation: This container never processes untrusted HTML input so this vuln does not apply.
+    - CVE_2025_8194: >-
+        Description: A defect in the CPython “tarfile” module affecting the “TarFile” extraction and entry
+        enumeration APIs. The tar implementation would process tar archives with negative offsets without error, resulting
+        in an infinite loop and deadlock during the parsing of maliciously crafted tar archives.
+        Mitigation: This container does not utilize the tarfile module so this vuln is not applicable. However, this vulnerability can be
+        mitigated by including the following patch after importing the “tarfile” module: 
+        https://gist.github.com/sethmlarson/1716ac5b82b73dbcbf23ad2eff8b33e1
+    - CVE_2025_66416: >-
+        Description: Model Context Protocol (MCP) Python SDK does not enable DNS rebinding protection by
+        Mitigation: this tool container does not use MCP protocol, so this CVE is not applicable.
+    - CVE_2025_13836: >-
+        Description: When reading an HTTP response from a server, if no read amount is specified, the default
+        behavior will be to use Content-Length. This allows a malicious server to cause the client to read large amounts of
+        data into memory, potentially causing OOM or other DoS.
+        Mitigation: this tool container does not run as an HTTP server, so this CVE is not applicable.
+    - CVE_2025_12084: >-
+        Description: When building nested elements using xml.dom.minidom methods such as appendChild() that have a
+        dependency on _clear_id_cache() the algorithm is quadratic. Availability can be impacted when building excessively
+        nested documents.
+        Mitigation: this tool container does not parse XML, so this CVE is not applicable
+  semgrep:
+    exclusions: 
+      "semgrep.rules.community.dockerfile.security.secret-in-build-arg": >-
+        CI_JOB_TOKEN is used in buildargs for kaniko to push to the local container registry. 
+        This token expires as soon as the job is finished and therefore is not a concern if 
+        leaked.
+    rule_sets: [] # will use 'community' by default
+    ignore: ['**/venv/**', "**/.venv/**", tests/] # files and paths to ignore, supports glob pattern: https://git-scm.com/docs/gitignore#_pattern_format
+  clamav:
+    false_positives: []
+  zap:
+    skip_reason: "This image is a tool used to test other images, and therefore doesn't have a service to be scanned."
+    debug: false
+    cert_path: ""
+    port: 65534
+    service_ports: []
