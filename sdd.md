@@ -83,15 +83,15 @@ g. (U) Container Software/Pipeline can now be installed, and BoE is incorporated
 
 ### Purpose
 
-(U) The Cloud Observability Spend Toolkit (COST) provides authorized Department of Defense (DoD) personnel with a centralized, user-friendly interface to visualize, analyze, and manage Microsoft Azure cloud expenditures. The application directly interfaces with the Azure Cost Management API to present near real-time spending data, enabling financial managers, cloud engineers, and leadership to effectively track budgets, identify spending anomalies, and make informed financial decisions regarding their cloud resources.
+(U) Duck Hunt Web is a browser-based fan recreation of the NES classic Duck Hunt, developed by CW3 Justin Whitten as a demonstration and morale application. It provides authorized DoD personnel with a fully playable game featuring NES-accurate gameplay mechanics, synthesized audio, and animated sprite graphics — all rendered client-side in the browser with no external API dependencies. An arcade-style leaderboard with persistent top-10 scores provides a competitive element for users across sessions.
 
 ### Intended Users
 
-a. (U) Intended users include financial managers, cloud engineers, and leadership within the Artificial Intelligence Integration Center (AI2C) and other authorized U.S. Army organizations who are responsible for overseeing Azure cloud budgets and resources.
+a. (U) Intended users include personnel within the Artificial Intelligence Integration Center (AI2C) and other authorized U.S. Army organizations with access to the NIPRNet deployment of the application.
 
 ### Identification
 
-(U) The COST application is a Government Off-the-Shelf (GOTS) software solution developed by AI2C. It will be deployed on NIPRNET and is designed for use by U.S. Army Cyber Command personnel.
+(U) Duck Hunt Web is a Government Off-the-Shelf (GOTS) and Free and Open Source Software (FOSS) solution developed by CW3 Justin Whitten. It will be deployed on NIPRNET as a demonstration and morale application.
 
 <!-- Fill in this form's header with your project info and with an 'X' where applicable -->
 
@@ -99,9 +99,9 @@ a. (U) Intended users include financial managers, cloud engineers, and leadershi
 \begin{center}
 \begin{tabular}{|c|c|}
 \hline
-\textbf{Software Name} & <Cloud Observability Spend Toolkit (COST)> \\
+\textbf{Software Name} & <Duck Hunt Web> \\
 \hline
-\textbf{Version}   & v2.6.0 \\
+\textbf{Version}   & v0.1.0 \\
 \hline
 \end{tabular}
 
@@ -125,9 +125,9 @@ X & Free and Open Source Software (FOSS)  \\
 \hline
  & Installed on Desktop  \\
 \hline
-X & Application Server with Database  \\
+ & Application Server with Database  \\
 \hline
- & Application Server with Persistent Storage  \\
+X & Application Server with Persistent Storage  \\
 \hline
 \end{tabular}
 
@@ -136,9 +136,9 @@ X & Application Server with Database  \\
 \hline
  & \textbf{Users of the Software}  \\
 \hline
- & U.S. Army Cyber Command  \\
+X & U.S. Army Cyber Command  \\
 \hline
-X & U.S. Army Cyber Command and other DoD organizations  \\
+ & U.S. Army Cyber Command and other DoD organizations  \\
 \hline
 \end{tabular}
 
@@ -180,7 +180,7 @@ X & NIPRNET  \\
 
 ### System Categorization
 
-(U) The system is categorized as LOW Confidentiality, LOW Integrity, and LOW Availability. It does not store or process classified information or PII beyond standard "Business" information (e.g., user email). The data is a reflection of Azure billing information, and its temporary loss or corruption would not result in mission failure.
+(U) The system is categorized as LOW Confidentiality, LOW Integrity, and LOW Availability. It does not store or process classified information or PII. The only persistent data is the leaderboard (player-chosen 3-letter initials and numeric scores). Temporary loss or corruption of leaderboard data would not result in mission failure.
 
 **Security categorization of the system that is the consumer of this pipeline**:
 
@@ -288,7 +288,7 @@ X & NIPRNet (IL5) (TEST, PROD)  \\
 
 ### Architecture Diagram
 
-(U) The COST application follows a modern microservices architecture. The frontend is a containerized React Single-Page Application (SPA) served by Nginx. The backend is a containerized Python FastAPI REST API. A Redis cache provides job queuing and temporary result storage. A background worker service processes long-running data fetch jobs asynchronously. All components are deployed as separate services within a Kubernetes cluster. User authentication is handled via an OIDC redirect flow with Azure Active Directory (Microsoft Entra ID), and cost data is fetched from the Azure Cost Management API via background jobs for improved performance and rate limit management.
+(U) Duck Hunt Web follows a single-container architecture. A Go HTTP server serves both the compiled TypeScript/Vite frontend as static files and the leaderboard REST API from a single binary on port 8080. All game logic, rendering (Canvas 2D), and audio synthesis (Web Audio API) execute entirely client-side in the user's browser. The only server-side persistence is the leaderboard (`scores.json`), stored in a flat JSON file on a Kubernetes PersistentVolumeClaim mounted at `/app/data`. There are no external API calls, no authentication backends, and no inter-service dependencies.
 
 ![Architecture Diagram](docs/sdd/architecture-diagram.png)
 
@@ -300,98 +300,81 @@ X & NIPRNet (IL5) (TEST, PROD)  \\
 
 ### Software Purpose / Goals
 
-(U) The primary goal of the COST application is to provide clear, actionable insights into Azure cloud spending for Army personnel. It aims to replace manual data gathering and spreadsheet analysis with an automated, interactive, and centralized dashboard. Key objectives include: providing centralized visibility of all authorized subscriptions, enabling trend analysis and cost forecasting, facilitating detailed resource-level cost exploration, and simplifying the creation of cost reports.
+(U) The primary goal of Duck Hunt Web is to provide AI2C personnel with an interactive, browser-based demonstration of modern web game development techniques and a morale application deployable within the DoD NIPRNet environment. Key objectives include: delivering NES-accurate duck hunting gameplay entirely client-side with no ROM or proprietary asset distribution, synthesizing all audio programmatically via the Web Audio API, implementing an arcade-style persistent leaderboard backed by a minimal Go REST API, and packaging the entire application as a single container deployable via Docker Compose or Kubernetes.
 
 ### Software Functionality
 
-(U) The COST application provides the following core functions:
+(U) Duck Hunt Web provides the following core functions:
 
-1. **Authentication**: Users authenticate via their standard government Azure Active Directory credentials using the OIDC redirect flow.
+1. **Game Loop**: Ducks spawn from the bottom of the screen in pairs per round. Each duck flies in a randomized direction, bounces off screen edges, and escapes upward if not shot within the time limit. Three shots are available per round and three lives total.
 
-2. **Subscription Loading**: Upon login, users can select which of their authorized Azure subscriptions they wish to analyze. The application creates background jobs to fetch cost data asynchronously, allowing users immediate access while data loads in the background. Users can choose between "Fast" mode (current day only) or "Standard" mode (current day ±7 days including forecast data).
+2. **Scoring**: Each duck hit awards 500 points. A perfect round (all ducks hit) adds a 500-point flat bonus. Consecutive perfect rounds apply a streak multiplier (`round_total × streak × 10%`). Losing all ducks in a round costs one life. Floating score popups display points at the duck's landing position.
 
-3. **Dashboard View**: A customizable dashboard with draggable and resizable widgets. Widgets include various charts (line, bar, doughnut), key performance indicators, and aggregated cost summaries.
+3. **Dog Animation**: An intro sequence plays at the start of each round — the dog sprints in from the left, sniff-walks toward center screen, perks up on alert, and dives into the bush foreground. After each round the dog emerges to celebrate (holding ducks) or mock the player (no ducks hit).
 
-4. **Comparison View**: A side-by-side view allowing users to compare cost metrics between different subscriptions across various timeframes.
+4. **Audio**: All sounds are synthesized at runtime via the Web Audio API. Sounds include: gunshot, duck hit, duck escape, empty gun click, dog laugh, score fanfare, and a looping background music track. A global mute toggle (M key) applies a smooth gain ramp.
 
-5. **Resource View**: A detailed, drill-down view of all resources within a selected subscription, grouped by Azure Resource Provider, allowing for granular cost analysis.
+5. **Leaderboard**: A top-10 arcade-style leaderboard stores player initials (3 letters) and scores server-side as JSON, persisted across container restarts via a Kubernetes PVC. Automatically falls back to browser `localStorage` if the Go API is unreachable.
 
-6. **Data Management**: A dedicated page for managing data loading jobs, viewing data coverage across subscriptions and date ranges, and triggering on-demand data fetches for specific dates. Includes export/import functionality for offline data analysis.
-
-7. **Settings**: A page for users to manage their profile (display name, avatar) and update their list of selected subscriptions for data loading.
-
-8. **Theming**: Multiple user-selectable color themes (Light, Dark, Neon) for improved user experience and accessibility.
+6. **Pause / Quit**: ESC toggles pause from the playing state. Q quits to game over while paused. Click resumes from pause.
 
 ### Software Components
 
 | Component | Technology | Function |
 | --------- | ---------- | -------- |
-| Frontend | React, Material-UI, Recharts	| A Single-Page Application (SPA) that provides the user interface. Renders all views, charts, and tables. |
-| Frontend Server	| Nginx (in Docker container)	| A lightweight web server that serves the static, built React application files. |
-| Backend API	| Python, FastAPI	| A RESTful API that handles requests from the frontend, manages background jobs, and serves cached results. |
-| Backend Server	| Uvicorn (in Docker container)	| An ASGI server that runs the Python FastAPI application. |
-| Worker Service	| Python, asyncio	| A background service that processes cost data fetch jobs from the Redis queue, handles Azure API rate limits with retry logic, and stores results. |
-| Redis Cache	| Redis (in Docker container)	| Provides job queue management and temporary storage for job results. Jobs are queued by the backend API and processed by workers. |
-| Azure SDKs	| azure-mgmt-costmanagement, azure-identity	| Python libraries used by the worker to securely authenticate and query the Azure Cost Management and Forecast APIs. |
-| Client Storage	| Browser IndexedDB (Dexie.js)	| Stores cost data locally with per-resource, per-day granularity (v3 schema). Enables offline data access and reduces API calls. |
-| Legacy Cache	| Browser localStorage	| Caches user settings, theme choice, and profile data for backward compatibility. |
+| Go HTTP Server | Go 1.22, `net/http` | Serves compiled static frontend assets and the `/api/scores` REST API. Single binary, no external framework. |
+| Frontend Application | TypeScript, Vite | Compiled and served as static files. All game logic, state management, and input handling execute client-side in the browser. |
+| Game Engine | HTML5 Canvas 2D | Renders all game graphics: NES background sprite, ducks, dog, HUD, title screen, leaderboard, and name entry screens. |
+| Audio Engine | Web Audio API | Synthesizes all game audio at runtime using oscillators, noise buffers, and envelope shaping. No audio files are distributed. |
+| Sprite Sheet Loader | TypeScript (`SpriteSheet.ts`) | Loads a user-supplied PNG sprite atlas and draws named frames. Gracefully falls back to canvas primitives if the sprite sheet is absent. |
+| Leaderboard Storage | `scores.json` on PVC | Flat JSON file persisted on a Kubernetes PersistentVolumeClaim. Stores the top-10 scores with player initials. |
+| Client Fallback Storage | Browser `localStorage` | Used automatically when the Go API is unreachable (development without backend). |
 
 ### User Interface
 
-(U) The application provides a modern Graphical User Interface (GUI) built with Material-UI. The main layout consists of a static header, a collapsible navigation sidebar on the left, a main content area, and a static footer.
+(U) The application is a full-canvas HTML5 experience. All screens — the animated title card, gameplay HUD, pause overlay, leaderboard display, and 3-letter initials entry — are rendered exclusively via the Canvas 2D API. There are no traditional HTML form elements in the game UI.
 
-(U) Initial user interaction is with the Azure AD login page, which is presented via a browser redirect (OIDC flow). This may require Multi-Factor Authentication (MFA) as enforced by DoD policy. Once authenticated, the user is presented with a one-time subscription selection screen, followed by the main dashboard. All subsequent interaction occurs within the SPA without full page reloads.
-
-![User Interface](docs/sdd/user-interface.png)
+(U) Input is handled via mouse clicks and keyboard events. The browser cursor is hidden during gameplay and replaced by a crosshair drawn on the canvas. Keyboard controls include: click to shoot or advance screens, ESC to pause, Q to quit, M to mute, and arrow keys with Enter/Space for leaderboard name entry.
 
 ### Configuration Management
 
-(U) Application configuration is managed entirely through environment variables, following the Twelve-Factor App methodology.
+(U) Application configuration is managed entirely through environment variables injected at container startup via Kubernetes ConfigMaps.
 
-- **Backend (Python)**: Environment variables are read at runtime by the FastAPI application. These are injected into the container via Kubernetes ConfigMaps.
+- **`PORT`**: HTTP listen port for the Go server (default: `8080`).
 
-- **Frontend (React)**: Environment variables are injected at container startup. An entrypoint.sh script reads variables from the Kubernetes ConfigMap and substitutes them into the static JavaScript files before the Nginx server starts. This allows a single Docker image to be deployed to different environments (Dev, Test, Prod) without being rebuilt.
+- **`STATIC_DIR`**: Path to the compiled Vite frontend assets served as static files (default: `./static`; production: `/app/static`).
+
+- **`SCORES_FILE`**: Path to the leaderboard JSON file (default: `./scores.json`; production: `/app/data/scores.json`).
+
+(U) No secrets or sensitive configuration values are required. There is no database connection string, no authentication client ID, and no external API key.
 
 ### Development and Testing
 
-(U) Development follows an Agile methodology. The application is composed of two primary codebases: frontend and backend.
+(U) Development follows an iterative workflow. The application consists of two primary components: a TypeScript/Vite frontend and a Go HTTP backend.
 
-- **Frontend Testing**: The React frontend utilizes Jest for unit tests and the React Testing Library for component-level integration tests.
+- **Frontend Development**: Vite provides hot module replacement (HMR) for rapid iteration. The Vite dev server proxies `/api` requests to the Go server automatically, allowing full-stack local development without rebuilding.
 
-- **Backend Testing**: The Python backend utilizes pytest for unit and integration tests of API endpoints and service logic.
+- **Backend Development**: The Go server is built with a single `go build` command and has no external runtime dependencies beyond the standard library.
 
 - **CI/CD**: All code is managed in a Git repository and is subject to automated testing and security scans via the cDSO pipeline on every commit.
+
+- **Container Testing**: `docker compose up --build` provides a single-command full-stack test environment matching production behavior.
 
 #### Milestones
 
 (U) Project progress is measured by the completion of versioned feature sets.
-- v1.0.0: Initial backend and frontend implementation.
 
-- v1.1.0: Implementation of deployment onto UDS Core Development cluster.
-
-- v2.0.0: Frontend revamp. Initial implementation of dashboard and widget functionality.
-
-- v2.1.0: Addition of Comparison and Resource View pages.
-
-- v2.2.0: Refactoring of data loading to a user-driven, chunked batch process to handle API rate limits.
-
-- v2.4.0: Implementation of advanced theming system and UI/UX polish.
-
-- v2.5.0: Implementation of individual subscription selection and data loading.
-
-- v2.6.0: Implementation of asynchronous job-based architecture with Redis queue, worker pods, and IndexedDB v3 schema for improved performance and scalability. Addition of forecast data support and Data Management page.
+- v0.1.0: Initial release — full NES-accurate gameplay, duck and dog sprite animations, synthesized Web Audio API sounds, arcade leaderboard with Go backend, Docker multi-stage build, Kubernetes manifests.
 
 #### Failure Conditions & Mitigations
 
 | Failure Condition | Impact | Mitigation |
 | ----------------- | ------ | ----------- |
-| Azure Cost Management API unavailable or slow	| Users cannot load or refresh data.	| Jobs will be queued and retried automatically. Client-side IndexedDB cache serves existing data until API recovers.
-| Azure AD unavailable	| Users cannot log in.	| This is an external dependency; no application-level mitigation is possible.
-| Backend API service fails/crashes	| Users cannot create new jobs or query job status.	| Kubernetes will automatically restart the failing pod. Existing jobs continue processing in workers.
-| Worker service fails/crashes	| Active jobs fail or stall.	| Kubernetes will automatically restart the failing pod. Failed jobs can be retried by users from Data Management page.
-| Redis cache unavailable	| Job queue and result storage unavailable.	| Application will display error. Kubernetes will restart Redis pod. Jobs must be recreated after recovery.
-| Frontend service fails/crashes	| Users cannot access the UI.	| Kubernetes will automatically restart the failing pod.
-| Azure API rate limiting (429 errors)	| Data loading slows or fails temporarily.	| Worker implements exponential backoff retry logic with 60-second delays on rate limit errors. Week/month jobs use range queries instead of daily splits for better efficiency.
+| Go server fails/crashes | Users cannot access the application or submit scores. | Kubernetes will automatically restart the failing pod. |
+| PVC unavailable | Leaderboard scores cannot be read or written. | Application automatically falls back to `localStorage` for leaderboard data. |
+| `sprites.png` absent from container | Game renders with canvas primitive fallback graphics instead of sprite sheet. | Automatic fallback — gameplay is fully functional without the sprite sheet. |
+| Browser lacks Canvas 2D or Web Audio API support | Game cannot render or produce audio. | Application requires a modern browser (Chrome, Firefox, Edge). No legacy browser support is planned. |
+| User submits score while API is unreachable | Score is written to `localStorage` only and will not appear on the server-side leaderboard. | User is notified; score is preserved locally. |
 
 
 ```{=latex}
@@ -402,57 +385,40 @@ X & NIPRNet (IL5) (TEST, PROD)  \\
 
 ### Networking Capabilities
 
-(U) The COST application is a web-based client-server application. All network traffic between the end-user's browser, the frontend and backend containers, and the external Azure APIs occurs over encrypted HTTPS (TLS 1.2 or higher). The frontend container and backend container communicate with each other over the internal Kubernetes cluster network.
+(U) Duck Hunt Web is a single-container web application with no inter-service communication. The Go HTTP server handles all traffic — both static file serving and the leaderboard API — from a single port (8080). All user-facing traffic flows through the Kubernetes Ingress over HTTPS (TLS 1.2 or higher). There are no external API calls, no outbound network dependencies, and no communication between services within the cluster.
 
 ### Ports / Protocol / Services
 
 | Service/Component | Port(s) | Protocol(s) | Purpose |
 | ----------------- | ------- | ----------- | ------- |
-| Frontend (Nginx)	| 8080	| TCP	| Internal port the Nginx container listens on.
-| Backend (Uvicorn)	| 8000	| TCP	| Internal port the FastAPI container listens on.
-| Worker Service	| N/A	| N/A	| Background worker; does not expose ports. Communicates via Redis.
-| Redis Cache	| 6379	| TCP	| Internal port for Redis pub/sub and data storage. Only accessible within cluster.
-| Kubernetes Ingress	| 443	| TCP	| External port for all user traffic to the application.
-| Azure APIs	| 443	| HTTPS	| External calls to Microsoft Entra ID, Cost Management, and Forecast APIs.
+| Go HTTP Server | 8080 | TCP | Internal port serving static frontend files and the `/api/scores` REST API. |
+| Kubernetes Ingress | 443 | TCP | External HTTPS entry point for all user traffic. TLS terminated at the Ingress. |
 
 ### Encryption
 
-(U) Encryption in Transit: All data flows, including user-to-frontend, frontend-to-backend, and backend-to-Azure, are encrypted using Transport Layer Security (TLS) as part of the HTTPS protocol.
-(U) Encryption at Rest: The application does not have its own persistent database. Cost data is temporarily stored in Redis (in-memory) during job processing and permanently cached in the user's browser IndexedDB. Configuration secrets are managed by Kubernetes Secrets, which are stored encrypted in etcd. The user's cost data and settings cached in the browser are subject to the security model of the end-user's browser and operating system. Redis does not persist data to disk; all job data expires after 24 hours.
+(U) Encryption in Transit: All user-facing traffic is encrypted via TLS (HTTPS) as enforced by the Kubernetes Ingress. Internal cluster traffic between the Ingress and the Go server pod is HTTP over the cluster-internal network.
+
+(U) Encryption at Rest: The only persistent data is `scores.json` stored on a Kubernetes PersistentVolumeClaim backed by an Azure Managed Disk. Azure Managed Disks are encrypted at rest by default using platform-managed keys (Azure Storage Service Encryption). No application-level encryption of this file is implemented, as it contains only non-sensitive leaderboard data (player initials and scores).
 
 ### Authentication
 
-(U) User authentication is handled via the OpenID Connect (OIDC) 1.0 protocol.
-
-1. The frontend React application uses the Microsoft Authentication Library (MSAL) for React.
-
-2. Unauthenticated users are redirected to the standard Microsoft Entra ID (Azure AD) login page.
-
-3. Upon successful authentication, the user is redirected back to the application with an ID token and an access token.
-
-4. The frontend stores the tokens and includes the access token as a Bearer token in the Authorization header of every API request to the backend.
-
-5. The backend API validates the token and creates background jobs that include the user's token. When the worker processes these jobs, it uses the user's token to create an authenticated Azure SDK client, which then makes requests to the Azure APIs on behalf of the logged-in user.
+(U) Duck Hunt Web does not implement application-level user authentication. No user accounts, credentials, or identity tokens are collected or stored. Access control is enforced at the Kubernetes Ingress and network boundary layer by the AKS platform and cDSO infrastructure. The only persistent user data is a voluntarily entered 3-letter display name and numeric score submitted to the leaderboard.
 
 ### Operating System
 
-(U) The application is designed and tested to run exclusively on Linux-based container operating systems.
+(U) The application is designed and tested to run exclusively on Linux-based container operating systems using a multi-stage Docker build.
 
-- **Frontend Build Stage**: node:23-alpine
+- **Frontend Build Stage**: node:20-alpine
 
-- **Frontend Final Stage**: alpine:3.22 with Nginx
+- **Backend Build Stage**: golang:1.22-alpine
 
-- **Backend Stage**: python:3.12-alpine
-
-- **Worker Stage**: python:3.12-alpine (same image as backend, different entrypoint)
-
-- **Redis Stage**: redis:7-alpine
+- **Final Runtime Stage**: alpine:3.19 (minimal runtime image containing only the Go binary and compiled static assets)
 
 - **Target Architecture**: linux/amd64
 
 ### Role-Based Access Control (RBAC)
 
-(U) The COST application does not implement its own internal roles. Access control is deferred to and enforced by the underlying Azure Role-Based Access Control (RBAC) system. The data a user can view is strictly limited by the permissions of their Azure AD identity. To view cost data for a subscription, a user must have at least the "Reader" role on that subscription in Azure. The application operates with the principle of least privilege by using the user's own token for all API calls.
+(U) Duck Hunt Web does not implement internal role-based access control. All users who can reach the application have identical access: play the game and submit a leaderboard score. No administrative interface or privileged operations exist within the application. Access restriction is the sole responsibility of the Kubernetes Ingress configuration and network boundary.
 
 <!-- START: DO NOT EDIT -->
 
@@ -496,13 +462,15 @@ Its definition can be found here: <https://code.code.cdso.army.mil/cdso/cdso/-/b
 
 # Appendix A -- References
 
-1. (U) Azure Cost Management and Billing documentation: https://docs.microsoft.com/en-us/azure/cost-management-billing/
+1. (U) HTML Canvas API: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
 
-2. (U) Microsoft Authentication Library (MSAL) for React: https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/lib/msal-react
+2. (U) Web Audio API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
 
-3. (U) FastAPI Documentation: https://fastapi.tiangolo.com/
+3. (U) Vite Documentation: https://vitejs.dev/
 
-4. (U) Material-UI Documentation: https://mui.com/
+4. (U) Go `net/http` Documentation: https://pkg.go.dev/net/http
+
+5. (U) Keep a Changelog: https://keepachangelog.com/en/1.1.0/
 
 ```{=latex}
 \newpage
@@ -514,26 +482,25 @@ Make sure to add any acronyms used in this CSDD that are pertinent to your organ
 
 | Acronym | Definition                                     |
 | ------- | ---------------------------------------------- |
-| AI2C	| Artificial Intelligence Integration Center
-| AO	| Authorizing Official
-| API	| Application Programming Interface
-| CDSO	| Community DevSecOps
-| CI / CD	| Continuous Integration / Continuous Deployment
-| COST	| Cloud Observability Spend Toolkit
-| GOTS	| Government Off-the-Shelf
-| GUI	| Graphical User Interface
-| IndexedDB	| Indexed Database API (browser storage)
-| ISSM	| Information System Security Manager
-| MSAL	| Microsoft Authentication Library
-| OIDC	| OpenID Connect
-| RBAC	| Role-Based Access Control
-| Redis	| Remote Dictionary Server (in-memory cache)
-| RMF	| Risk Management Framework
-| SDD	| Software Design Document
-| SPA	| Single-Page Application
-| STIG	| Security Technical Implementation Guide
-| TLS	| Transport Layer Security
-| UI	| User Interface
+| AI2C    | Artificial Intelligence Integration Center
+| AO      | Authorizing Official
+| API     | Application Programming Interface
+| CDSO    | Community DevSecOps
+| CI / CD | Continuous Integration / Continuous Deployment
+| GOTS    | Government Off-the-Shelf
+| GUI     | Graphical User Interface
+| HMR     | Hot Module Replacement
+| HUD     | Heads-Up Display
+| ISSM    | Information System Security Manager
+| NES     | Nintendo Entertainment System
+| PVC     | PersistentVolumeClaim
+| RBAC    | Role-Based Access Control
+| RMF     | Risk Management Framework
+| SDD     | Software Design Document
+| SPA     | Single-Page Application
+| STIG    | Security Technical Implementation Guide
+| TLS     | Transport Layer Security
+| UI      | User Interface
 
 ```{=latex}
 \newpage

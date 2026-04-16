@@ -1,0 +1,10 @@
+graph TB
+    User["User Browser\n(Canvas 2D · Web Audio API)"]
+    Ingress["AKS Ingress\nHTTPS :443"]
+    Go["Go HTTP Server\n:8080\nStatic Files + /api/scores"]
+    PVC["PersistentVolumeClaim\nscores.json"]
+
+    User -- "HTTPS" --> Ingress
+    Ingress -- "HTTP" --> Go
+    Go -- "Read / Write" --> PVC
+    Go -- "Static assets\n(JS, CSS, sprites)" --> User
