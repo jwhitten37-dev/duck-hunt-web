@@ -1,0 +1,205 @@
+container_spec:
+INFO: $name.container_spec is not defined
+INFO: registry.cdso.army.mil/cdso/containers/approved-tool/ is an approved container registry
+INFO: registry.cdso.army.mil/cdso/containers/approved-base/ is an approved container registry
+WARNING: 
+===========================================================================
+=                           cDSO WARNING                                  =
+===========================================================================
+    THIS CONTAINER IS RUNNING AS ROOT.
+    THIS WILL NOT BE TOLERATED WHEN DEPLOYING TO A PRODUCTION ENVIRONMENT
+    WITHOUT EXPLICIT JUSTIFICATION
+===========================================================================
+{
+  "status": "FAIL",
+  "reasons": [
+    "PRODUCTION CONTAINER RUNNING AS ROOT WITHOUT JUSTIFICATION."
+  ],
+  "data": {
+    "VALID_FROM_LINES": [
+      "registry.cdso.army.mil/cdso/containers/approved-base/node_alpine:24",
+      "registry.cdso.army.mil/cdso/containers/approved-base/go_alpine:1.26",
+      "registry.cdso.army.mil/cdso/containers/approved-base/alpine:3.23"
+    ],
+    "INVALID_FROM_LINES": [],
+    "USER": "root",
+    "EXTERNAL_DEPENDENCIES": []
+  }
+}
+
+semgrep:
+[INFO] Excluding Semgrep rule(s):
+  - app.rules.community.typescript.react.portability.i18next.jsx-not-internationalized
+  - app.rules.community.typescript.react.portability.i18next.jsx-label-not-i18n
+[INFO] Using Semgrep ruleset(s):
+  - community
+[INFO] Using Semgrep ignore path(s):
+  - .git/*
+[INFO] Severity Level: WARNING
+[INFO] running command: /app/venv/bin/semgrep scan --timeout=0 --no-git-ignore --metrics=off --exclude-rule=app.rules.community.generic.ci.audit.changed-semgrepignore --sarif-output=semgrep-sarif.json --severity=WARNING --config=/app/rules/community
+[INFO] Semgrep scan completed
+[INFO] Semgrep scan has no excluded findings
+[ERROR] FAILURE: Your scan failed because it reported findings that need to be addressed. Please apply mitigations or provide a justification for each finding listed below.
+[INFO] Semgrep Unexcluded Findings with format <file>:<line number>
+  app.rules.community.go.lang.security.audit.net.use-tls
+    Found an HTTP server without TLS. Use 'http.ListenAndServeTLS' instead. See https://golang.org/pkg/net/http/#ListenAndServeTLS for more information.
+    - cmd/server/main.go:149
+  app.rules.community.yaml.kubernetes.security.allow-privilege-escalation-no-securitycontext
+    In Kubernetes, each pod runs in its own isolated environment with its own set of security policies. However, certain container images may contain `setuid` or `setgid` binaries that could allow an attacker to perform privilege escalation and gain access to sensitive resources. To mitigate this risk, it's recommended to add a `securityContext` to the container in the pod, with the parameter `allowPrivilegeEscalation` set to `false`. This will prevent the container from running any privileged processes and limit the impact of any potential attacks. By adding a `securityContext` to your Kubernetes pod, you can help to ensure that your containerized applications are more secure and less vulnerable to privilege escalation attacks.
+    - deploy/zarf/helm/frontend/templates/deployment.yaml:23
+  app.rules.community.yaml.kubernetes.security.writable-filesystem-container
+    Container {{ .Values.service.name } is running with a writable root filesystem. This may allow malicious applications to download and run additional payloads, or modify container files. If an application inside a container has to save something temporarily consider using a tmpfs. Add 'readOnlyRootFilesystem: true' to this container to prevent this.
+    - deploy/zarf/helm/frontend/templates/deployment.yaml:23
+  app.rules.community.yaml.kubernetes.best-practice.no-fractional-cpu-limits
+    When you set a fractional CPU limit on a container, the CPU cycles available will be throttled, even though most nodes can handle processes alternating between using 100% of the CPU.
+    - deploy/zarf/helm/frontend/templates/deployment.yaml:36
+  app.rules.community.json.npm.security.package-dependencies-check
+    Package dependencies with variant versions may lead to dependency hijack and confusion attacks. Better to specify an exact version or use package-lock.json for a specific version of the package.
+    - frontend/package.json:11
+    - frontend/package.json:12
+[INFO] Semgrep Unexcluded Findings summary by amount of violations per rule
+  app.rules.community.go.lang.security.audit.net.use-tls: 1
+  app.rules.community.yaml.kubernetes.security.allow-privilege-escalation-no-securitycontext: 1
+  app.rules.community.yaml.kubernetes.security.writable-filesystem-container: 1
+  app.rules.community.yaml.kubernetes.best-practice.no-fractional-cpu-limits: 1
+  app.rules.community.json.npm.security.package-dependencies-check: 2
+
+zap:
+[!] 'zap' not found in 'frontend' in deploy/pipelines/cdso_config_prod.yml
+[!] Using default config.
+[✓] Passed variable check
+[!] 'zap' not found in 'frontend' in deploy/pipelines/cdso_config_prod.yml
+[!] Using default config.
+[•] Starting network and web application scanner
+[•] Waiting for application to start
+[✓] Application started
+[•] Scanning all ports for web services
+[•] Expected open ports: [8080]
+[✓] Discovered HTTP service on port 8080
+[✓] 1 web service(s) identified for scanning
+[•] Starting ZAP scan on http://127.0.0.1:8080
+[x] Job failed: SECURITY_FAILURE
+[!] 6 warning(s) for port 8080
+[!]  ‣  Content Security Policy (CSP) Header Not Set (10038-1)
+    Risk / Confidence: Medium / High
+    Alert Info: https://www.zaproxy.org/docs/alerts/10038-1/
+    Instances:
+      id        → 2
+      uri       → http://127.0.0.1:8080
+      nodeName  → http://127.0.0.1:8080
+      method    → GET
+      id        → 13
+      uri       → http://127.0.0.1:8080/robots.txt
+      nodeName  → http://127.0.0.1:8080/robots.txt
+      method    → GET
+      id        → 12
+      uri       → http://127.0.0.1:8080/sitemap.xml
+      nodeName  → http://127.0.0.1:8080/sitemap.xml
+      method    → GET
+[!]  ‣  Missing Anti-clickjacking Header (10020-1)
+    Risk / Confidence: Medium / Medium
+    Alert Info: https://www.zaproxy.org/docs/alerts/10020-1/
+    Instances:
+      id        → 0
+      uri       → http://127.0.0.1:8080
+      nodeName  → http://127.0.0.1:8080
+      method    → GET
+      param     → x-frame-options
+      id        → 11
+      uri       → http://127.0.0.1:8080/robots.txt
+      nodeName  → http://127.0.0.1:8080/robots.txt
+      method    → GET
+      param     → x-frame-options
+      id        → 10
+      uri       → http://127.0.0.1:8080/sitemap.xml
+      nodeName  → http://127.0.0.1:8080/sitemap.xml
+      method    → GET
+      param     → x-frame-options
+[!]  ‣  Sub Resource Integrity Attribute Missing (90003)
+    Risk / Confidence: Medium / High
+    Alert Info: https://www.zaproxy.org/docs/alerts/90003/
+    Instances:
+      id        → 6
+      uri       → http://127.0.0.1:8080
+      nodeName  → http://127.0.0.1:8080
+      method    → GET
+      evidence  → <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+      id        → 17
+      uri       → http://127.0.0.1:8080/robots.txt
+      nodeName  → http://127.0.0.1:8080/robots.txt
+      method    → GET
+      evidence  → <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+      id        → 16
+      uri       → http://127.0.0.1:8080/sitemap.xml
+      nodeName  → http://127.0.0.1:8080/sitemap.xml
+      method    → GET
+      evidence  → <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+[!]  ‣  X-Content-Type-Options Header Missing (10021)
+    Risk / Confidence: Low / Medium
+    Alert Info: https://www.zaproxy.org/docs/alerts/10021/
+    Instances:
+      id        → 8
+      uri       → http://127.0.0.1:8080
+      nodeName  → http://127.0.0.1:8080
+      method    → GET
+      param     → x-content-type-options
+      otherinfo → This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At "High" threshold this scan rule will not alert on client or server error responses.
+      id        → 20
+      uri       → http://127.0.0.1:8080/assets/index-Bs-QQ2Ye.js
+      nodeName  → http://127.0.0.1:8080/assets/index-Bs-QQ2Ye.js
+      method    → GET
+      param     → x-content-type-options
+      otherinfo → This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At "High" threshold this scan rule will not alert on client or server error responses.
+      id        → 19
+      uri       → http://127.0.0.1:8080/robots.txt
+      nodeName  → http://127.0.0.1:8080/robots.txt
+      method    → GET
+      param     → x-content-type-options
+      otherinfo → This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At "High" threshold this scan rule will not alert on client or server error responses.
+[!]  ‣  Modern Web Application (10109)
+    Risk / Confidence: Informational / Medium
+    Alert Info: https://www.zaproxy.org/docs/alerts/10109/
+    Instances:
+      id        → 4
+      uri       → http://127.0.0.1:8080
+      nodeName  → http://127.0.0.1:8080
+      method    → GET
+      evidence  → <script type="module" crossorigin src="/assets/index-Bs-QQ2Ye.js"></script>
+      otherinfo → No links have been found while there are scripts, which is an indication that this is a modern web application.
+      id        → 15
+      uri       → http://127.0.0.1:8080/robots.txt
+      nodeName  → http://127.0.0.1:8080/robots.txt
+      method    → GET
+      evidence  → <script type="module" crossorigin src="/assets/index-Bs-QQ2Ye.js"></script>
+      otherinfo → No links have been found while there are scripts, which is an indication that this is a modern web application.
+      id        → 14
+      uri       → http://127.0.0.1:8080/sitemap.xml
+      nodeName  → http://127.0.0.1:8080/sitemap.xml
+      method    → GET
+      evidence  → <script type="module" crossorigin src="/assets/index-Bs-QQ2Ye.js"></script>
+      otherinfo → No links have been found while there are scripts, which is an indication that this is a modern web application.
+[!]  ‣  User Agent Fuzzer (10104)
+    Risk / Confidence: Informational / Medium
+    Alert Info: https://www.zaproxy.org/docs/alerts/10104/
+    Instances:
+      id        → 23
+      uri       → http://127.0.0.1:8080/assets
+      nodeName  → http://127.0.0.1:8080/assets
+      method    → GET
+      param     → Header User-Agent
+      attack    → Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)
+      id        → 22
+      uri       → http://127.0.0.1:8080/assets
+      nodeName  → http://127.0.0.1:8080/assets
+      method    → GET
+      param     → Header User-Agent
+      attack    → Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)
+      id        → 21
+      uri       → http://127.0.0.1:8080/assets
+      nodeName  → http://127.0.0.1:8080/assets
+      method    → GET
+      param     → Header User-Agent
+      attack    → Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)
