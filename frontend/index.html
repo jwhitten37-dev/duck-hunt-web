@@ -4,11 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Duck Hunt</title>
-    <!-- NES-style pixel font — loaded before the game starts (see main.ts) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!--
+      NES-style pixel font — self-hosted to avoid external CDN dependency.
+      Place PressStart2P-Regular.woff2 (OFL licensed, available from Google Fonts)
+      at frontend/public/fonts/PressStart2P-Regular.woff2 before building.
+    -->
     <style>
+      @font-face {
+        font-family: 'Press Start 2P';
+        src: url('/fonts/PressStart2P-Regular.woff2') format('woff2');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
       * {
         margin: 0;
         padding: 0;

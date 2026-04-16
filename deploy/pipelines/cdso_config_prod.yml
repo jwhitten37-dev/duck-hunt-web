@@ -1,0 +1,48 @@
+
+deployment_level: "PRODUCTION"
+organization: "ai2c"
+security_group: "ai2c"
+
+frontend:
+  project_type: "container"
+  dockerfile_folder: "."
+  container_lifespan: "PERSISTENT"
+  connection_context: "INTERNAL"
+  trufflehog:
+    false_positives: []
+    excluded_files: []
+  container_spec:
+    root_user: ""
+    non_minimized: ""
+  semgrep:
+    exclusions:
+      "app.rules.community.go.lang.security.audit.net.use-tls": >-
+        The Go HTTP server intentionally uses plain HTTP (ListenAndServe) because TLS is
+        terminated at the Kubernetes Ingress layer (AKS). The server only listens on the
+        internal cluster network and is never directly exposed to external traffic.
+        Using ListenAndServeTLS at the container level would be redundant and would require
+        managing TLS certificates inside the container, which is handled by the ingress
+        controller. This is the standard architecture for containerized applications behind
+        an ingress controller in AKS.
+    rule_sets: []
+    ignore: ['frontend/node_modules/**', 'frontend/dist/**', 'static/**']
+  clamav:
+    false_positives: []
+  zap:
+    debug: false
+    cert_path: ""
+    port: 8080
+    service_ports: [8080]
+    ignore_alerts:
+      - id: "10109"
+        reason: >-
+          Modern Web Application (informational only). The application is a TypeScript/Vite
+          SPA rendered on an HTML5 Canvas. ZAP cannot crawl canvas-based applications via
+          traditional link discovery. This is expected behavior and does not represent a
+          security vulnerability.
+      - id: "10104"
+        reason: >-
+          User Agent Fuzzer (informational only). The /assets directory returns a 404 for
+          direct access, which is the expected behavior. The application does not serve
+          content differently based on User-Agent and is not vulnerable to user-agent-based
+          attacks. This finding does not represent a security risk.

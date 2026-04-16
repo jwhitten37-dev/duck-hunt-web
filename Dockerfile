@@ -1,5 +1,5 @@
 # ─── Stage 1: Build the TypeScript / Vite frontend ───────────────────────────
-FROM node:20-alpine AS frontend-builder
+FROM node:24-alpine AS frontend-builder
 
 WORKDIR /frontend
 COPY frontend/package*.json ./
@@ -11,7 +11,7 @@ RUN npm run build
 
 
 # ─── Stage 2: Build the Go server ────────────────────────────────────────────
-FROM golang:1.22-alpine AS go-builder
+FROM golang:1.26-alpine AS go-builder
 
 WORKDIR /app
 COPY go.mod ./
@@ -27,14 +27,21 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 
 
 # ─── Stage 3: Minimal runtime image ──────────────────────────────────────────
-FROM alpine:3.19
+FROM alpine:3.23
 
-# ca-certificates needed for any future TLS outbound calls
 RUN apk --no-cache add ca-certificates
+
+# Non-root user for production security
+RUN addgroup -S -g 1001 duckhunt && adduser -S -u 1001 -G duckhunt duckhunt
 
 WORKDIR /app
 COPY --from=go-builder /app/duck-hunt-server ./
 COPY --from=go-builder /app/static          ./static
+
+# Create scores data directory and transfer ownership before dropping privileges
+RUN mkdir -p /app/data && chown -R duckhunt:duckhunt /app
+
+USER duckhunt
 
 EXPOSE 8080
 

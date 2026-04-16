@@ -54,6 +54,24 @@ func sanitizeName(s string) string {
 	return string(out)
 }
 
+// ─── Middleware ─────────────────────────────────────────────────────────────────
+
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Content-Security-Policy",
+			"default-src 'none'; "+
+				"script-src 'self'; "+
+				"style-src 'self' 'unsafe-inline'; "+
+				"font-src 'self'; "+
+				"img-src 'self' data: blob:; "+
+				"connect-src 'self'; "+
+				"frame-ancestors 'none'")
+		next.ServeHTTP(w, r)
+	})
+}
+
 // ─── Handlers ──────────────────────────────────────────────────────────────────
 
 func corsHeaders(w http.ResponseWriter) {
@@ -146,7 +164,7 @@ func main() {
 	})
 
 	log.Printf("Duck Hunt listening on :%s  static=%s  scores=%s", port, staticDir, scoresPath)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if err := http.ListenAndServe(":"+port, securityHeaders(mux)); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }

@@ -23,12 +23,23 @@ spec:
           env:
             - name: PORT
               value: "8080"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1001
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: scores-data
+              mountPath: /app/data
           resources:
             requests:
               cpu: 50m
               memory: 64Mi
             limits:
-              cpu: 200m
+              cpu: "1"
               memory: 128Mi
           livenessProbe:
             httpGet:
@@ -44,3 +55,6 @@ spec:
             initialDelaySeconds: 3
             periodSeconds: 5
             failureThreshold: 2
+      volumes:
+        - name: scores-data
+          emptyDir: {}
